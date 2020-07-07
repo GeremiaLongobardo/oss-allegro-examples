@@ -87,11 +87,15 @@ Allegro API client and prints out the session info:
   @Override
   public void run()
   {
-    allegroApi_ = new AllegroApi.Builder()
-      .withPodUrl(podUrl_)
-      .withUserName(userName_)
-      .withRsaPemCredentialFile(credentialFile_)
-      .build();
+	allegroApi_ = new AllegroApi.Builder()
+	            .withConfiguration(new AllegroConfiguration.Builder()
+	                    .withPodUrl(podUrl_)
+	                    .withRsaPemCredentialFile(credentialFile_)
+	                    .withApiConnectionSettings(new ConnectionSettings.Builder()
+	                        .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
+	                        .build())
+	                    .build())
+	            .build();
     
     System.out.println(allegroApi_.getSessioninfo());
   }

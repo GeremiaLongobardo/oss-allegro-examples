@@ -13,6 +13,7 @@ import com.symphony.oss.allegro.api.ConsumerManager;
 import com.symphony.oss.allegro.api.IAllegroApi;
 import com.symphony.oss.allegro.api.request.FetchFeedMessagesRequest;
 import com.symphony.oss.fugue.cmd.CommandLineHandler;
+import com.symphony.oss.models.allegro.canon.facade.AllegroConfiguration;
 import com.symphony.oss.models.allegro.canon.facade.ChatMessage;
 import com.symphony.oss.models.allegro.canon.facade.IReceivedChatMessage;
 import com.symphony.oss.models.allegro.canon.facade.IReceivedSocialMessage;
@@ -64,13 +65,15 @@ public class FetchFeedMessages extends CommandLineHandler implements Runnable
   @Override
   public void run()
   {
-    AllegroApi.Builder builder = new AllegroApi.Builder()
-      .withPodUrl(podUrl_)
-      .withObjectStoreUrl(objectStoreUrl_)
-      .withUserName(serviceAccount_)
-      .withRsaPemCredentialFile(credentialFile_)
-      ;
-    
+	AllegroApi.Builder builder = new AllegroApi.Builder()
+	            .withConfiguration(new AllegroConfiguration.Builder()
+	                    .withPodUrl(podUrl_)
+	                    .withApiUrl(objectStoreUrl_)
+	                    .withUserName(serviceAccount_)
+	                    .withRsaPemCredentialFile(credentialFile_)
+	                    .build()
+	                    );
+
     if(trust_ != null)
     {
       switch(trust_.toLowerCase())

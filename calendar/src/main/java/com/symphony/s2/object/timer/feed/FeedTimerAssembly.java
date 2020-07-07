@@ -57,6 +57,9 @@ import com.symphony.oss.fugue.trace.ITraceContext;
 import com.symphony.oss.fugue.trace.ITraceContextTransaction;
 import com.symphony.oss.fugue.trace.ITraceContextTransactionFactory;
 import com.symphony.oss.fugue.trace.log.LoggerTraceContextTransactionFactory;
+import com.symphony.oss.models.allegro.canon.SslTrustStrategy;
+import com.symphony.oss.models.allegro.canon.facade.AllegroConfiguration;
+import com.symphony.oss.models.allegro.canon.facade.ConnectionSettings;
 import com.symphony.oss.models.core.canon.facade.PodAndUserId;
 import com.symphony.oss.models.core.canon.facade.ThreadId;
 import com.symphony.oss.models.object.canon.DeletionType;
@@ -130,18 +133,21 @@ public class FeedTimerAssembly extends CommandLineHandler
    * @return 
    */
   public String run()
-  {
-      allegroApi_ = new AllegroApi.Builder()
-        .withPodUrl(podUrl_)
-        .withObjectStoreUrl(objectStoreUrl_)
-        .withUserName(serviceAccount_)
-        .withRsaPemCredentialFile(credentialFile_)
-        .withFactories(CalendarModel.FACTORIES)
-        .withTrustAllSslCerts()
-        .withTraceFactory(traceFactory_)
-        .withSessionToken(sessionToken_)
-        .withKeymanagerToken(keymanagerToken_)
-        .build();
+  {     
+  	allegroApi_ = new AllegroApi.Builder()
+            .withConfiguration(new AllegroConfiguration.Builder()
+                    .withPodUrl(podUrl_)
+                    .withApiUrl(objectStoreUrl_)
+                    .withUserName(serviceAccount_)
+                    .withRsaPemCredentialFile(credentialFile_)
+                    .withApiConnectionSettings(new ConnectionSettings.Builder()
+                        .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
+                        .build())
+                    .build())
+            .withFactories(CalendarModel.FACTORIES)
+            .withTraceFactory(traceFactory_)
+            .withKeymanagerToken(keymanagerToken_)
+            .build();
       
     userId_         = allegroApi_.getUserId();
     

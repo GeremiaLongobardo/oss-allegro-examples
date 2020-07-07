@@ -16,38 +16,35 @@
 
 package com.symphony.s2.allegro.examples.calendar;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.symphony.oss.allegro.api.AllegroApi;
 import com.symphony.oss.allegro.api.IAllegroApi;
 import com.symphony.oss.allegro.api.Permission;
 import com.symphony.oss.allegro.api.ResourcePermissions;
-import com.symphony.oss.allegro.api.request.PartitionId;
-import com.symphony.oss.allegro.api.request.UpsertFeedRequest;
-import com.symphony.oss.allegro.examples.calendar.canon.CalendarModel;
+import com.symphony.oss.allegro.api.request.PartitionQuery;
+import com.symphony.oss.allegro.api.request.UpsertPartitionRequest;
+import com.symphony.oss.commons.hash.Hash;
 import com.symphony.oss.fugue.cmd.CommandLineHandler;
 import com.symphony.oss.models.allegro.canon.SslTrustStrategy;
 import com.symphony.oss.models.allegro.canon.facade.AllegroConfiguration;
 import com.symphony.oss.models.allegro.canon.facade.ConnectionSettings;
 import com.symphony.oss.models.core.canon.facade.PodAndUserId;
-import com.symphony.oss.models.object.canon.IFeed;
+import com.symphony.oss.models.object.canon.IPageOfUserPermissions;
+import com.symphony.oss.models.object.canon.IUserPermissionsRequest;
+import com.symphony.oss.models.object.canon.facade.IPartition;
 
 /**
- * Retrieve all objects on the given Sequence.
+ * An example application which creates a ToDoItem, adding it to a current and absolute sequence.
  * 
  * @author Bruce Skingle
  *
  */
-public class CreateFeed extends CommandLineHandler implements Runnable
+public class FetchPartitionUsers extends CommandLineHandler implements Runnable
 {
-  private static final Logger log_ = LoggerFactory.getLogger(CreateFeed.class);
-  
-  private static final String ALLEGRO          = "ALLEGRO_";
-  private static final String SERVICE_ACCOUNT  = "SERVICE_ACCOUNT";
-  private static final String POD_URL          = "POD_URL";
+  private static final String ALLEGRO         = "ALLEGRO_";
+  private static final String SERVICE_ACCOUNT = "SERVICE_ACCOUNT";
+  private static final String POD_URL         = "POD_URL";
   private static final String OBJECT_STORE_URL = "OBJECT_STORE_URL";
-  private static final String CREDENTIAL_FILE  = "CREDENTIAL_FILE";
+  private static final String CREDENTIAL_FILE = "CREDENTIAL_FILE";
   private static final String OWNER_USER_ID    = "OWNER_USER_ID";
   private static final String OTHER_USER_ID    = "OTHER_USER_ID";
   
@@ -55,27 +52,28 @@ public class CreateFeed extends CommandLineHandler implements Runnable
   private String              podUrl_;
   private String              objectStoreUrl_;
   private String              credentialFile_;
-  private PodAndUserId        ownerId_;
   private PodAndUserId        otherUserId_;
+  private Long                ownerId_;
   
   private IAllegroApi         allegroApi_;
 
   /**
    * Constructor.
    */
-  public CreateFeed()
+  public FetchPartitionUsers()
   {
     withFlag('s',   SERVICE_ACCOUNT,  ALLEGRO + SERVICE_ACCOUNT,  String.class,   false, true,   (v) -> serviceAccount_       = v);
     withFlag('p',   POD_URL,          ALLEGRO + POD_URL,          String.class,   false, true,   (v) -> podUrl_               = v);
     withFlag('o',   OBJECT_STORE_URL, ALLEGRO + OBJECT_STORE_URL, String.class,   false, true,   (v) -> objectStoreUrl_       = v);
-    withFlag('f',   CREDENTIAL_FILE,  ALLEGRO + CREDENTIAL_FILE,  String.class,   false, true,   (v) -> credentialFile_       = v);
-    withFlag('u',   OWNER_USER_ID,    ALLEGRO + OWNER_USER_ID,    Long.class,     false, false,  (v) -> ownerId_              = PodAndUserId.newBuilder().build(v));
+    withFlag('f',   CREDENTIAL_FILE,  ALLEGRO + CREDENTIAL_FILE,  String.class,   false, false,  (v) -> credentialFile_       = v);
+    withFlag('u',   OWNER_USER_ID,    ALLEGRO + OWNER_USER_ID,    Long.class,     false, false,  (v) -> ownerId_              = v);
     withFlag(null,  OTHER_USER_ID,    ALLEGRO + OTHER_USER_ID,    Long.class,     false, false,  (v) -> otherUserId_          = PodAndUserId.newBuilder().build(v));
   }
   
   @Override
   public void run()
-  {
+  { 
+
     allegroApi_ = new AllegroApi.Builder()
             .withConfiguration(new AllegroConfiguration.Builder()
                     .withPodUrl(podUrl_)
@@ -86,37 +84,36 @@ public class CreateFeed extends CommandLineHandler implements Runnable
                         .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
                         .build())
                     .build())
-            .withFactories(CalendarModel.FACTORIES)
-            .build();
+      .build();
     
-    System.out.println("CallerId is " + allegroApi_.getUserId());
-    System.out.println("OwnerId is " + otherUserId_);
-    System.out.println("OtherUserId is " + otherUserId_);
+    System.out.println("PodId is " + allegroApi_.getPodId());
     
     ResourcePermissions permissions = null;
     
     if(otherUserId_ != null)
     {
       permissions = new ResourcePermissions.Builder()
-          .withUser(otherUserId_, Permission.Read)
-          .build()
-          ;
+          .withUser(otherUserId_, Permission.Read, Permission.Write)
+          .build();
     }
+       
     
-    UpsertFeedRequest.Builder builder = new UpsertFeedRequest.Builder()
-        .withName(CalendarApp.FEED_NAME)
-        .withPermissions(permissions)
-        .withPartitionIds(
-            new PartitionId.Builder()
-            .withName(CalendarApp.PARTITION_NAME)
-            .withOwner(ownerId_)
-            .build()
-            )
-        ;
+    IPartition partition = allegroApi_.upsertPartition(new UpsertPartitionRequest.Builder()
+          .withName(CalendarApp.PARTITION_NAME)
+          .withPermissions(permissions)
+          .build()
+        );
     
-    IFeed feed = allegroApi_.upsertFeed(builder.build());
+    System.out.println("partition is " + partition);
     
-    log_.info("Feed is " + feed);
+    System.out.println("partition hash is " + partition.getId().getHash());
+    
+    IPageOfUserPermissions requests = allegroApi_.fetchPartitionUsers(new PartitionQuery.Builder()
+            	.withHash(Hash.newInstance(partition.getId().getHash().toString())
+                ).build()
+            );
+    for(IUserPermissionsRequest r : requests.getData())
+    	System.out.println("UserPermission is " + r);
   }
   
   /**
@@ -126,10 +123,17 @@ public class CreateFeed extends CommandLineHandler implements Runnable
    */
   public static void main(String[] args)
   {
-    CreateFeed program = new CreateFeed();
+    FetchPartitionUsers program = new FetchPartitionUsers();
     
     program.process(args);
     
+    try
+    {
     program.run();
+    }
+    catch(RuntimeException e)
+    {
+      e.printStackTrace();
+    }
   }
 }

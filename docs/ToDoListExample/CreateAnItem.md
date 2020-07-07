@@ -48,12 +48,16 @@ public class CreateToDoItem extends CommandLineHandler implements Runnable
   public void run()
   { 
     allegroApi_ = new AllegroApi.Builder()
-      .withPodUrl(podUrl_)
-      .withObjectStoreUrl(objectStoreUrl_)
-      .withUserName(serviceAccount_)
-      .withRsaPemCredentialFile(credentialFile_)
-      .withTrustAllSslCerts()
-      .build();
+            .withConfiguration(new AllegroConfiguration.Builder()
+                    .withPodUrl(podUrl_)
+                    .withApiUrl(objectStoreUrl_)
+                    .withUserName(serviceAccount_)
+                    .withRsaPemCredentialFile(credentialFile_)
+                    .withApiConnectionSettings(new ConnectionSettings.Builder()
+                        .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
+                        .build())
+                    .build())
+            .build();
     
     PodAndUserId ownerUserId = ownerId_ == null ? allegroApi_.getUserId() : PodAndUserId.newBuilder().build(ownerId_);
     

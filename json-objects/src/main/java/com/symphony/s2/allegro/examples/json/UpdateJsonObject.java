@@ -24,6 +24,9 @@ import com.symphony.oss.allegro.api.IAllegroApi;
 import com.symphony.oss.allegro.api.request.FetchPartitionObjectsRequest;
 import com.symphony.oss.allegro.api.request.PartitionQuery;
 import com.symphony.oss.fugue.cmd.CommandLineHandler;
+import com.symphony.oss.models.allegro.canon.SslTrustStrategy;
+import com.symphony.oss.models.allegro.canon.facade.AllegroConfiguration;
+import com.symphony.oss.models.allegro.canon.facade.ConnectionSettings;
 import com.symphony.oss.models.object.canon.facade.ApplicationObjectPayload;
 import com.symphony.oss.models.object.canon.facade.IApplicationObjectPayload;
 import com.symphony.oss.models.object.canon.facade.IStoredApplicationObject;
@@ -63,12 +66,17 @@ public class UpdateJsonObject extends CommandLineHandler implements JsonObjectEx
   @Override
   public void run()
   {
-    allegroApi_ = new AllegroApi.Builder()
-      .withPodUrl(podUrl_)
-      .withObjectStoreUrl(objectStoreUrl_)
-      .withUserName(serviceAccount_)
-      .withRsaPemCredentialFile(credentialFile_)
-      .build();
+	 allegroApi_ = new AllegroApi.Builder()
+	            .withConfiguration(new AllegroConfiguration.Builder()
+	                    .withPodUrl(podUrl_)
+	                    .withApiUrl(objectStoreUrl_)
+	                    .withUserName(serviceAccount_)
+	                    .withRsaPemCredentialFile(credentialFile_)
+	                    .withApiConnectionSettings(new ConnectionSettings.Builder()
+	                        .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
+	                        .build())
+	                    .build())
+	            .build();	    
     
     allegroApi_.fetchPartitionObjects(new FetchPartitionObjectsRequest.Builder()
         .withQuery(new PartitionQuery.Builder()

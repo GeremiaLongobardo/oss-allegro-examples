@@ -25,7 +25,9 @@ import com.symphony.oss.fugue.cmd.CommandLineHandler;
 import com.symphony.oss.models.allegro.canon.SslTrustStrategy;
 import com.symphony.oss.models.allegro.canon.facade.AllegroConfiguration;
 import com.symphony.oss.models.allegro.canon.facade.ConnectionSettings;
+import com.symphony.oss.models.core.canon.facade.PodAndUserId;
 import com.symphony.oss.models.object.canon.facade.IApplicationObjectPayload;
+import com.symphony.oss.models.pod.canon.IUserV2;
 
 /**
  * Retrieve all objects on the given Sequence.
@@ -33,13 +35,14 @@ import com.symphony.oss.models.object.canon.facade.IApplicationObjectPayload;
  * @author Bruce Skingle
  *
  */
-public class ListJsonObjects extends CommandLineHandler implements JsonObjectExample
+public class CountJsonObjects extends CommandLineHandler implements JsonObjectExample
 {
   private static final String ALLEGRO          = "ALLEGRO_";
   private static final String SERVICE_ACCOUNT  = "SERVICE_ACCOUNT";
   private static final String POD_URL          = "POD_URL";
   private static final String OBJECT_STORE_URL = "OBJECT_STORE_URL";
   private static final String CREDENTIAL_FILE  = "CREDENTIAL_FILE";
+  private static final String OWNER_USER_ID    = "OWNER_USER_ID";
   private static final String CERT_FILE        = "CERT_FILE";
   private static final String CERT_PASSWORD    = "CERT_PASSWORD";
   private static final String SESSION_AUTH_URL = "SESSION_AUTH_URL";
@@ -57,16 +60,19 @@ public class ListJsonObjects extends CommandLineHandler implements JsonObjectExa
   private String              sessionAuthUrl_;
   private String              keyAuthUrl_;
   private String              proxyUrl_;
+  private Long                ownerId_;
+  private int messageCount_;
 
   /**
    * Constructor.
    */
-  public ListJsonObjects()
+  public CountJsonObjects()
   {
     withFlag('s',   SERVICE_ACCOUNT,  ALLEGRO + SERVICE_ACCOUNT,  String.class,   false, false,  (v) -> serviceAccount_       = v);
     withFlag('p',   POD_URL,          ALLEGRO + POD_URL,          String.class,   false, true,   (v) -> podUrl_               = v);
     withFlag('o',   OBJECT_STORE_URL, ALLEGRO + OBJECT_STORE_URL, String.class,   false, true,   (v) -> objectStoreUrl_       = v);
     withFlag('f',   CREDENTIAL_FILE,  ALLEGRO + CREDENTIAL_FILE,  String.class,   false, false,  (v) -> credentialFile_       = v);
+    withFlag('u',   OWNER_USER_ID,    ALLEGRO + OWNER_USER_ID,    Long.class,     false, false,  (v) -> ownerId_              = v);
     withFlag(null,  CERT_FILE,        ALLEGRO + CERT_FILE,        String.class,   false, false,  (v) -> certFile_             = v);
     withFlag(null,  CERT_PASSWORD,    ALLEGRO + CERT_PASSWORD,    String.class,   false, false,  (v) -> certPassword_         = v);
     withFlag(null,  SESSION_AUTH_URL, ALLEGRO + SESSION_AUTH_URL, String.class,   false, false,  (v) -> sessionAuthUrl_       = v);
@@ -78,45 +84,40 @@ public class ListJsonObjects extends CommandLineHandler implements JsonObjectExa
   public void run()
   {
     allegroApi_ = new AllegroApi.Builder()
-      .withConfiguration("{\n" + 
-          "  \"_type\":\"com.symphony.s2.model.allegro.AllegroConfiguration\",\n" + 
-          "  \"_version\":\"1.0\",\n" + 
-          "  \"apiConnectionSettings\":{\n" + 
-          "    \"_type\":\"com.symphony.s2.model.allegro.ConnectionSettings\",\n" + 
-          "    \"_version\":\"1.0\",\n" + 
-          "    \"maxHttpConnections\":200,\n" + 
-          "    \"sslTrustStrategy\":\"TRUST_ALL_CERTS\"\n" + 
-          "  },\n" + 
-          "  \"apiUrl\":\"https://dev.api.symphony.com\",\n" + 
-          "  \"authCertFile\":\"/Users/bruce/credentials/allegroCerts/certs/allegroBot.p12\",\n" + 
-          "  \"authCertFilePassword\":\"changeit\",\n" + 
-          "  \"keyAuthUrl\":\"https://psdev-api.symphony.com:8444\",\n" + 
-          "  \"podUrl\":\"https://psdev.symphony.com\",\n" + 
-          "  \"sessionAuthUrl\":\"https://psdev-api.symphony.com:8444\"\n" + 
-          "}")
-//      .withConfiguration(new AllegroConfiguration.Builder()
-//          .withPodUrl(podUrl_)
-//          .withApiUrl(objectStoreUrl_)
-//          .withUserName(serviceAccount_)
-//          .withRsaPemCredentialFile(credentialFile_)
-//          .withAuthCertFile(certFile_)
-//          .withAuthCertFilePassword(certPassword_)
-//          .withSessionAuthUrl(sessionAuthUrl_)
-//          .withKeyAuthUrl(keyAuthUrl_)
-//          .withApiConnectionSettings(new ConnectionSettings.Builder()
-//              .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
-//              .withProxyUrl(proxyUrl_)
-//              .build())
-//          .build())
-      
+      .withConfiguration(new AllegroConfiguration.Builder()
+          .withPodUrl(podUrl_)
+          .withApiUrl(objectStoreUrl_)
+          .withUserName(serviceAccount_)
+          .withRsaPemCredentialFile(credentialFile_)
+          .withAuthCertFile(certFile_)
+          .withAuthCertFilePassword(certPassword_)
+          .withSessionAuthUrl(sessionAuthUrl_)
+          .withKeyAuthUrl(keyAuthUrl_)
+          .withDefaultConnectionSettings(new ConnectionSettings.Builder()
+              .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
+              .withProxyUrl(proxyUrl_)
+              .build())
+          .build())
       .build();
     
    System.out.println("Allegro configuration = " + allegroApi_.getConfiguration());
-  
-    allegroApi_.fetchPartitionObjects(new FetchPartitionObjectsRequest.Builder()
+   
+   PodAndUserId ownerUserId = ownerId_ == null ? allegroApi_.getUserId() : PodAndUserId.newBuilder().build(ownerId_);
+   System.out.println("CallerId is " + allegroApi_.getUserId());
+   System.out.println("OwnerId is " + ownerUserId);
+
+   while(true)
+   {
+     IUserV2 sessionInfo = allegroApi_.getSessioninfo();
+     
+     System.out.println("sessionInfo=" + sessionInfo);
+     
+     messageCount_=0;
+     
+     allegroApi_.fetchPartitionObjects(new FetchPartitionObjectsRequest.Builder()
         .withQuery(new PartitionQuery.Builder()
             .withName(PARTITION_NAME)
-            .withOwner(allegroApi_.getUserId())
+            .withOwner(ownerUserId)
             .withMaxItems(10)
             .build()
             )
@@ -125,11 +126,23 @@ public class ListJsonObjects extends CommandLineHandler implements JsonObjectExa
             {
               System.out.println("Header:  " + item.getStoredApplicationObject().getHeader());
               System.out.println("Payload: " + item);
+              messageCount_++;
             })
             .build()
             )
         .build()
         );
+    
+      System.out.println("Got " + messageCount_ + " objects, Sleeping...");
+      try
+      {
+        Thread.sleep(15000);
+      }
+      catch (InterruptedException e)
+      {
+        throw new IllegalStateException(e);
+      }
+    }
   }
   
   /**
@@ -139,7 +152,7 @@ public class ListJsonObjects extends CommandLineHandler implements JsonObjectExa
    */
   public static void main(String[] args)
   {
-    ListJsonObjects program = new ListJsonObjects();
+    CountJsonObjects program = new CountJsonObjects();
     
     program.process(args);
     

@@ -30,6 +30,10 @@ import com.symphony.oss.allegro.api.request.UpsertPartitionRequest;
 import com.symphony.oss.allegro.examples.calendar.canon.IToDoItem;
 import com.symphony.oss.allegro.examples.calendar.canon.ToDoItem;
 import com.symphony.oss.fugue.cmd.CommandLineHandler;
+import com.symphony.oss.models.allegro.canon.SslTrustStrategy;
+import com.symphony.oss.models.allegro.canon.facade.AllegroConfiguration;
+import com.symphony.oss.models.allegro.canon.facade.AllegroMultiTenantConfiguration;
+import com.symphony.oss.models.allegro.canon.facade.ConnectionSettings;
 import com.symphony.oss.models.core.canon.facade.PodAndUserId;
 import com.symphony.oss.models.core.canon.facade.ThreadId;
 import com.symphony.oss.models.object.canon.AffectedUsers;
@@ -87,19 +91,28 @@ public class CreateToDoItemInTwoStages extends CommandLineHandler implements Run
   @Override
   public void run()
   { 
-    allegroApi_ = new AllegroApi.Builder()
-      .withPodUrl(podUrl_)
-      .withObjectStoreUrl(objectStoreUrl_)
-      .withUserName(serviceAccount_)
-      .withRsaPemCredentialFile(credentialFile_)
-      .withTrustAllSslCerts()
-      .build();
+	    allegroApi_ = new AllegroApi.Builder()
+	            .withConfiguration(new AllegroConfiguration.Builder()
+	                    .withPodUrl(podUrl_)
+	                    .withApiUrl(objectStoreUrl_)
+	                    .withUserName(serviceAccount_)
+	                    .withRsaPemCredentialFile(credentialFile_)
+	                    .withApiConnectionSettings(new ConnectionSettings.Builder()
+	                        .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
+	                        .build())
+	                    .build())
+	            .build();
+	    
     
     multiTenantApi_ = new AllegroMultiTenantApi.Builder()
-        .withObjectStoreUrl(objectStoreUrl_)
-        .withPrincipalCredentialFile(mtCredentialFile_)
+    		 .withConfiguration(new AllegroMultiTenantConfiguration.Builder()
+	                    .withApiUrl(objectStoreUrl_)
+	                    .withRsaPemCredentialFile(credentialFile_)
+	                    .withApiConnectionSettings(new ConnectionSettings.Builder()
+	                        .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
+	                        .build())
+	                    .build())
         //.withFactories(ObjectStoreTestModel.FACTORIES)
-        .withTrustAllSslCerts()
         .build();
     
     multiTenantUserId_  = multiTenantApi_.getUserId();

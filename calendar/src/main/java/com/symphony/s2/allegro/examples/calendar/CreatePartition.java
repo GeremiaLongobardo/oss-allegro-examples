@@ -22,6 +22,9 @@ import com.symphony.oss.allegro.api.Permission;
 import com.symphony.oss.allegro.api.ResourcePermissions;
 import com.symphony.oss.allegro.api.request.UpsertPartitionRequest;
 import com.symphony.oss.fugue.cmd.CommandLineHandler;
+import com.symphony.oss.models.allegro.canon.SslTrustStrategy;
+import com.symphony.oss.models.allegro.canon.facade.AllegroConfiguration;
+import com.symphony.oss.models.allegro.canon.facade.ConnectionSettings;
 import com.symphony.oss.models.core.canon.facade.PodAndUserId;
 import com.symphony.oss.models.object.canon.facade.IPartition;
 
@@ -64,12 +67,16 @@ public class CreatePartition extends CommandLineHandler implements Runnable
   public void run()
   { 
     allegroApi_ = new AllegroApi.Builder()
-      .withPodUrl(podUrl_)
-      .withObjectStoreUrl(objectStoreUrl_)
-      .withUserName(serviceAccount_)
-      .withRsaPemCredentialFile(credentialFile_)
-      .withTrustAllSslCerts()
-      .build();
+            .withConfiguration(new AllegroConfiguration.Builder()
+                    .withPodUrl(podUrl_)
+                    .withApiUrl(objectStoreUrl_)
+                    .withUserName(serviceAccount_)
+                    .withRsaPemCredentialFile(credentialFile_)
+                    .withApiConnectionSettings(new ConnectionSettings.Builder()
+                        .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
+                        .build())
+                    .build())
+            .build();
     
     System.out.println("PodId is " + allegroApi_.getPodId());
     
@@ -79,8 +86,7 @@ public class CreatePartition extends CommandLineHandler implements Runnable
     {
       permissions = new ResourcePermissions.Builder()
           .withUser(otherUserId_, Permission.Read, Permission.Write)
-          .build()
-          ;
+          .build();
     }
     
     IPartition partition = allegroApi_.upsertPartition(new UpsertPartitionRequest.Builder()
@@ -90,6 +96,8 @@ public class CreatePartition extends CommandLineHandler implements Runnable
         );
     
     System.out.println("partition is " + partition);
+    
+    System.out.println("partition hash is " + partition.getId().getHash());
   }
   
   /**

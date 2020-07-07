@@ -54,13 +54,17 @@ public class CreateFeed extends CommandLineHandler implements Runnable
   public void run()
   {
     allegroApi_ = new AllegroApi.Builder()
-      .withPodUrl(podUrl_)
-      .withObjectStoreUrl(objectStoreUrl_)
-      .withUserName(serviceAccount_)
-      .withRsaPemCredentialFile(credentialFile_)
-      .withFactories(CalendarModel.FACTORIES)
-      .withTrustAllSslCerts()
-      .build();
+            .withConfiguration(new AllegroConfiguration.Builder()
+                    .withPodUrl(podUrl_)
+                    .withApiUrl(objectStoreUrl_)
+                    .withUserName(serviceAccount_)
+                    .withRsaPemCredentialFile(credentialFile_)
+                    .withApiConnectionSettings(new ConnectionSettings.Builder()
+                        .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
+                        .build())
+                    .build())
+            .withFactories(CalendarModel.FACTORIES)
+            .build();
     
     System.out.println("CallerId is " + allegroApi_.getUserId());
     System.out.println("OwnerId is " + otherUserId_);

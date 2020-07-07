@@ -11,6 +11,7 @@ import java.util.Date;
 import com.symphony.oss.allegro.api.AllegroApi;
 import com.symphony.oss.allegro.api.IAllegroApi;
 import com.symphony.oss.fugue.cmd.CommandLineHandler;
+import com.symphony.oss.models.allegro.canon.facade.AllegroConfiguration;
 import com.symphony.oss.models.allegro.canon.facade.IChatMessage;
 import com.symphony.oss.models.core.canon.facade.ThreadId;
 
@@ -52,14 +53,16 @@ public class TellTheTime extends CommandLineHandler implements Runnable
   @Override
   public void run()
   {
-    allegroApi_ = new AllegroApi.Builder()
-      .withPodUrl(podUrl_)
-      .withObjectStoreUrl(objectStoreUrl_)
-      .withUserName(serviceAccount_)
-      .withRsaPemCredentialFile(credentialFile_)
+		allegroApi_ = new AllegroApi.Builder()
+	            .withConfiguration(new AllegroConfiguration.Builder()
+	                    .withPodUrl(podUrl_)
+	                    .withApiUrl(objectStoreUrl_)
+	                    .withUserName(serviceAccount_)
+	                    .withRsaPemCredentialFile(credentialFile_)
+	                    .build())
+	            .build();
 //      .withTrustedSslCertResources(IAllegroApi.SYMPHONY_DEV_QA_ROOT_CERT)
-      .build();
-    
+        
     String presentationML     = "<div data-format=\"PresentationML\" data-version=\"2.0\" class=\"wysiwyg\"><p>The time is now <b>" + new Date() + "</b></p></div>";
 
     IChatMessage chatMessage = allegroApi_.newChatMessageBuilder()

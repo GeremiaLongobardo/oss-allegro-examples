@@ -1,12 +1,12 @@
 ---
-nav_order: 18
+nav_order: 19
 parent: ToDo List Example
 ---
-# Create A Partition
+# Fetch Partition Users
 
-The Create Partition example creates a new Partition.
+The Fetch Partition Users example creates a new Partition, gives ResourcesPermission to a certain user, different from the owner of such Partition, and retrieves the permission assigned.
 
-The first part of the program is almost identical to the [Hello World Example](/HelloWorld.html), see the description
+The first part of the program is almost identical to the [Hello World Example](/CreateAPartition.html), see the description
 there for more details.
 
 In this case we also need to provide the Object Store URL, since these examples use that API.
@@ -58,6 +58,8 @@ public class CreatePartition extends CommandLineHandler implements Runnable
     
     System.out.println("PodId is " + allegroApi_.getPodId());
     
+    
+    
 ```
 
 In the next part of the program, if an additional userId has been provided,
@@ -95,33 +97,32 @@ a simple name is sufficient the name can be passed on its own, as we do here:
           .withPermissions(permissions)
           .build()
         );
-    
-    System.out.println("partition is " + partition);
+```
+
+After creating the Partition with the ResourcePermissions assigned, we call __FetchPartitionUsers__ , only the partition Hash is needed as parameter for the lookup.
+The __IPageOfUserPermissions__ class is a wrapper which contains all the __ResourcePermissions__ objects
+
+```java
+    IPageOfUserPermissions requests = allegroApi_.fetchPartitionUsers(new PartitionQuery.Builder()
+            	.withHash(Hash.newInstance(partition.getId().getHash().toString())
+                ).build()
+            );
+    for(IUserPermissionsRequest r : requests.getData())
+    	System.out.println("UserPermission is " + r);
 ```
 
 When we run the program we see the following output:
 
 ```
 
-2020-06-09T07:27:37.120000000Z [main               ] INFO  com.symphony.oss.allegro.api.AllegroApi - AllegroApi constructor start
-2020-06-09T07:27:37.465000000Z [main               ] INFO  com.symphony.oss.allegro.api.AllegroApi - sbe auth....
-2020-06-09T07:27:38.207000000Z [main               ] INFO  com.symphony.oss.allegro.api.AllegroApi - fetch podInfo_....
-2020-06-09T07:27:38.331000000Z [main               ] INFO  com.symphony.oss.allegro.api.AllegroApi - keymanager auth....
-2020-06-09T07:27:38.501000000Z [main               ] INFO  com.symphony.oss.allegro.api.AllegroApi - getAccountInfo....
-2020-06-09T07:27:38.857000000Z [main               ] INFO  com.symphony.oss.allegro.api.AllegroApi - userId_ = 351775001412007
-2020-06-09T07:27:38.864000000Z [main               ] INFO  com.symphony.oss.allegro.api.AllegroApi - allegroApi constructor done.
-PodId is 5119
-partition is {
-  "_type":"com.symphony.s2.model.object.Partition",
+UserPermission is {
+  "_type":"com.symphony.s2.model.object.UserPermissionsRequest",
   "_version":"1.0",
-  "hashType":1,
-  "id":{
-    "_type":"com.symphony.s2.model.object.NamedUserIdObject",
-    "_version":"1.0",
-    "hashType":1,
-    "name":"MyCalendar",
-    "userId":351775001412007
-  }
+  "permissions":[
+    "READ",
+    "WRITE"
+  ],
+  "userId":1234
 }
 ```
 

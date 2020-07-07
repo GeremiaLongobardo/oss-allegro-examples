@@ -24,6 +24,9 @@ import com.symphony.oss.allegro.api.request.PartitionQuery;
 import com.symphony.oss.allegro.examples.calendar.canon.CalendarModel;
 import com.symphony.oss.allegro.examples.calendar.canon.IToDoItem;
 import com.symphony.oss.fugue.cmd.CommandLineHandler;
+import com.symphony.oss.models.allegro.canon.SslTrustStrategy;
+import com.symphony.oss.models.allegro.canon.facade.AllegroConfiguration;
+import com.symphony.oss.models.allegro.canon.facade.ConnectionSettings;
 import com.symphony.oss.models.object.canon.DeletionType;
 
 /**
@@ -61,14 +64,19 @@ public class DeleteFirstItem extends CommandLineHandler implements Runnable
   @Override
   public void run()
   {
-    allegroApi_ = new AllegroApi.Builder()
-      .withPodUrl(podUrl_)
-      .withObjectStoreUrl(objectStoreUrl_)
-      .withUserName(serviceAccount_)
-      .withRsaPemCredentialFile(credentialFile_)
-      .withFactories(CalendarModel.FACTORIES)
-      .withTrustAllSslCerts()
-      .build();
+	allegroApi_ = new AllegroApi.Builder()
+	            .withConfiguration(new AllegroConfiguration.Builder()
+	                    .withPodUrl(podUrl_)
+	                    .withApiUrl(objectStoreUrl_)
+	                    .withUserName(serviceAccount_)
+	                    .withRsaPemCredentialFile(credentialFile_)
+	                    .withApiConnectionSettings(new ConnectionSettings.Builder()
+	                        .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
+	                        .build())
+	                    .build())
+	            .withFactories(CalendarModel.FACTORIES)
+	            .build();
+	    
     
     allegroApi_.fetchPartitionObjects(new FetchPartitionObjectsRequest.Builder()
         .withQuery(new PartitionQuery.Builder()

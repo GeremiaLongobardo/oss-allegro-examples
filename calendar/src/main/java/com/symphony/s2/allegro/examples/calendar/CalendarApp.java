@@ -20,6 +20,7 @@ package com.symphony.s2.allegro.examples.calendar;
 
 public class CalendarApp
 {
-  public static final String PARTITION_NAME = "MyCalendar";
+  public static final String PARTITION_NAME  = "MyCalendar";
+  public static final String FEED_NAME       = "MyCalendarFeed";
 
 }
