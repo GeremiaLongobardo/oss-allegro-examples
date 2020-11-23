@@ -11,7 +11,7 @@
   <parent>
 		<groupId>com.symphony.oss</groupId>
 		<artifactId>oss-parent-pom</artifactId>
-		<version>0.4.0</version><!-- oss-parent-pom -->
+		<version>0.4.3</version><!-- oss-parent-pom -->
   </parent>
   
   <groupId>com.symphony.oss.allegro</groupId>
@@ -25,11 +25,11 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
 
-    <oss.commons.version>0.2.0</oss.commons.version>
-    <oss.canon.version>0.2.3-SNAPSHOT</oss.canon.version>
-    <oss.fugue.version>0.2.4-SNAPSHOT</oss.fugue.version>
-    <oss.models.version>0.7.2-SNAPSHOT</oss.models.version>
-    <allegro.version>0.5.2-SNAPSHOT</allegro.version>
+    <oss.commons.version>0.2.3</oss.commons.version>
+    <oss.canon.version>0.3.3</oss.canon.version>
+    <oss.fugue.version>0.2.18</oss.fugue.version>
+    <oss.models.version>0.7.18</oss.models.version>
+    <allegro.version>0.5.17</allegro.version>
     
     <canon.template.groupid>com.symphony.oss.canon</canon.template.groupid>
     <canon.template.java>canon-template-java</canon.template.java>
@@ -41,5 +41,6 @@
   	<module>get-message</module>
   	<module>calendar</module>
   	<module>json-objects</module>
+  	<module>benchmark</module>
   </modules>
 </project>

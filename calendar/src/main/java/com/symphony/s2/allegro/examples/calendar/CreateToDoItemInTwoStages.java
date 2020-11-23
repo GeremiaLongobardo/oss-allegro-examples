@@ -107,7 +107,7 @@ public class CreateToDoItemInTwoStages extends CommandLineHandler implements Run
     multiTenantApi_ = new AllegroMultiTenantApi.Builder()
     		 .withConfiguration(new AllegroMultiTenantConfiguration.Builder()
 	                    .withApiUrl(objectStoreUrl_)
-	                    .withRsaPemCredentialFile(credentialFile_)
+	                    .withPrincipalCredentialFile(mtCredentialFile_)
 	                    .withApiConnectionSettings(new ConnectionSettings.Builder()
 	                        .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
 	                        .build())

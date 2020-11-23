@@ -115,7 +115,8 @@ public class CreateFeed extends CommandLineHandler implements Runnable
         ;
     
     IFeed feed = allegroApi_.upsertFeed(builder.build());
-    
+
+    log_.info("Feed hash is " + feed.getId().getHash());
     log_.info("Feed is " + feed);
   }
   
