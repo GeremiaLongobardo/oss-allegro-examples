@@ -134,7 +134,7 @@ public class AllegroExamplesComplete extends CommandLineHandler implements Runna
     
     IStoredApplicationObject object = storeObject(ownerUserId, sortKey);
     
-    object = updateItem(object);
+    object = updateObject(object);
       
     fetchVersions(object);
     
@@ -142,7 +142,7 @@ public class AllegroExamplesComplete extends CommandLineHandler implements Runna
     
     fetchPartitionObjects(ownerUserId, sortKey);
     
-    deleteItem(object);
+    deleteObject(object);
     
     deleteFeed(ownerUserId, feed);
        
@@ -182,7 +182,7 @@ public class AllegroExamplesComplete extends CommandLineHandler implements Runna
     
   }
 
-  private void deleteItem(IStoredApplicationObject object)
+  private void deleteObject(IStoredApplicationObject object)
   {
     allegroApi_.delete(object, DeletionType.LOGICAL);
     
@@ -275,7 +275,7 @@ public class AllegroExamplesComplete extends CommandLineHandler implements Runna
     
     allegroApi_.fetchObjectVersions(new FetchObjectVersionsRequest.Builder()
         .withQuery(new VersionQuery.Builder()
-            .withMaxItems(1)
+            .withMaxItems(10)
             .withBaseHash(object.getBaseHash())
             .build()
             )
@@ -297,8 +297,8 @@ public class AllegroExamplesComplete extends CommandLineHandler implements Runna
         .build()
         );
     
-    if(list.size() == 0)
-      throw new IllegalStateException("No Object not retrieved from base hash");
+    if(list.size() != 2)
+      throw new IllegalStateException("Expected version: 2, got: "+list.size());
    
   }
 
@@ -400,7 +400,7 @@ public class AllegroExamplesComplete extends CommandLineHandler implements Runna
     }
   }
   
-  private IStoredApplicationObject updateItem(IStoredApplicationObject object) {
+  private IStoredApplicationObject updateObject(IStoredApplicationObject object) {
     
     ArrayList<IStoredApplicationObject> list = new ArrayList<>();
     
