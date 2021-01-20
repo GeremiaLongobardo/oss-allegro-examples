@@ -40,16 +40,39 @@
             <configuration>
               <srcDirs>src/main/canon</srcDirs>
               <proformaCopyDir>src/main</proformaCopyDir>
-              <!-- uriMapping>
-                <property>
+              <uriMapping>
+                <!-- <property>
                  <name>https://models.oss.symphony.com/core.json</name>
-                 <value>../oss-models/core-model/src/main/resources/canon/core.json</value>
+                 <value>foo/../../oss-models/core-model/src/main/resources/canon/core.json</value>
                 </property>
                 <property>
                  <name>https://models.oss.symphony.com/object.json</name>
                  <value>../oss-models/object-model/src/main/resources/canon/object.json</value>
+                </property> -->
+                
+                
+                <property>
+                 <name>https://models.oss.symphony.com/core.json</name>
+                 <value>/Users/bruce/symphony/git-SymphonyOSF/oss-models/core-model/src/main/resources/canon/core.json</value>
                 </property>
-              </uriMapping -->
+                <property>
+                 <name>https://models.oss.symphony.com/authc.json</name>
+                 <value>/Users/bruce/symphony/git-SymphonyOSF/oss-models/authc-model/src/main/resources/canon/authc.json</value>
+                </property>
+                <property>
+                 <name>https://models.oss.symphony.com/object.json</name>
+                 <value>/Users/bruce/symphony/git-SymphonyOSF/oss-models/object-model/src/main/resources/canon/object.json</value>
+                </property>
+                <property>
+                 <name>https://models.oss.symphony.com/crypto.json</name>
+                 <value>/Users/bruce/symphony/git-SymphonyOSF/oss-models/crypto-model/src/main/resources/canon/crypto.json</value>
+                </property>
+                <property>
+                 <name>https://models.oss.symphony.com/chat.json</name>
+                 <value>/Users/bruce/symphony/git-SymphonyOSF/oss-models/chat-model/src/main/resources/canon/chat.json</value>
+                </property>
+                
+              </uriMapping>
 
               <templateArtifacts>
                 <templateArtifact>
