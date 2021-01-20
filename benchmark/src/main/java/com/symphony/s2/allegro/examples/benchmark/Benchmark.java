@@ -29,8 +29,10 @@ import org.slf4j.LoggerFactory;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.symphony.oss.allegro.api.AllegroApi;
+import com.symphony.oss.allegro.api.AsyncConsumerManager;
 import com.symphony.oss.allegro.api.ConsumerManager;
 import com.symphony.oss.allegro.api.IAllegroApi;
+import com.symphony.oss.allegro.api.IAllegroQueryManager;
 import com.symphony.oss.allegro.api.request.FetchPartitionObjectsRequest;
 import com.symphony.oss.allegro.api.request.PartitionId;
 import com.symphony.oss.allegro.api.request.PartitionQuery;
@@ -44,6 +46,10 @@ import com.symphony.oss.canon.json.model.JsonDom;
 import com.symphony.oss.canon.json.model.JsonObject;
 import com.symphony.oss.canon.json.model.JsonObjectDom;
 import com.symphony.oss.fugue.cmd.CommandLineHandler;
+import com.symphony.oss.fugue.trace.ITraceContext;
+import com.symphony.oss.fugue.trace.ITraceContextTransaction;
+import com.symphony.oss.fugue.trace.ITraceContextTransactionFactory;
+import com.symphony.oss.fugue.trace.log.LoggerTraceContextTransactionFactory;
 import com.symphony.oss.models.allegro.canon.SslTrustStrategy;
 import com.symphony.oss.models.allegro.canon.facade.AllegroConfiguration;
 import com.symphony.oss.models.allegro.canon.facade.ConnectionSettings;
@@ -101,21 +107,33 @@ public class Benchmark extends CommandLineHandler implements Runnable, RequestHa
   @Override
   public void run()
   { 
+    AllegroConfiguration.Builder configBuilder = new AllegroConfiguration.Builder()
+    .withPodUrl(podUrl_)
+    .withApiUrl(objectStoreUrl_)
+    .withUserName(serviceAccount_)
+    .withRsaPemCredentialFile(credentialFile_)
+    .withApiConnectionSettings(new ConnectionSettings.Builder()
+        .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
+        .build());
+    
+    if(pemCredential_ != null)
+      configBuilder.withRsaPemCredential(pemCredential_);
+    
+    ITraceContextTransactionFactory traceFactory = new LoggerTraceContextTransactionFactory();
+    
     allegroApi_ = new AllegroApi.Builder()
-            .withConfiguration(new AllegroConfiguration.Builder()
-                    .withPodUrl(podUrl_)
-                    .withApiUrl(objectStoreUrl_)
-                    .withUserName(serviceAccount_)
-                    .withRsaPemCredentialFile(credentialFile_)
-                    .withRsaPemCredential(pemCredential_)
-                    .withApiConnectionSettings(new ConnectionSettings.Builder()
-                        .withSslTrustStrategy(SslTrustStrategy.TRUST_ALL_CERTS)
-                        .build())
-                    .build())
+            .withConfiguration(configBuilder.build())
+            .withTraceFactory(traceFactory)
             .build();
     
     PodAndUserId ownerUserId = ownerId_ == null ? allegroApi_.getUserId() : PodAndUserId.newBuilder().build(ownerId_);
     
+    try(ITraceContextTransaction t = traceFactory.createTransaction("Benchmark", "run1"))
+    {
+      ITraceContext trace = t.open();
+      
+      trace.trace("START");
+      
     System.out.println("CallerId is " + allegroApi_.getUserId());
     System.out.println("OwnerId is " + ownerUserId);
     System.out.println("PodId is " + allegroApi_.getPodId());
@@ -123,6 +141,7 @@ public class Benchmark extends CommandLineHandler implements Runnable, RequestHa
     benchmark("10", 10);
     benchmark("100", 100);
     benchmark("1000", 1000);
+    }
   }
   
   private void benchmark(String name, int cnt)
@@ -138,6 +157,7 @@ public class Benchmark extends CommandLineHandler implements Runnable, RequestHa
     }
     
     listItems(name);
+//    listItemsAsync(name);
   }
 
   private int listItems(String name)
@@ -153,6 +173,48 @@ public class Benchmark extends CommandLineHandler implements Runnable, RequestHa
             .build()
             )
           .withConsumerManager(new ConsumerManager.Builder()
+//              .withConsumer(IToDoItem.class, (item, trace) ->
+//              {
+//                synchronized(todoItems)
+//                {
+//                  todoItems.add(item);
+//                }
+//              })
+              .withConsumer(IStoredApplicationObject.class, (item, trace) ->
+              {
+                synchronized(storedItems)
+                {
+                  storedItems.add(item);
+                }
+              })
+              .build()
+              )
+          .build()
+          );
+    
+    long end = System.currentTimeMillis();
+    long time = end - start;
+    
+    log_.info("Read " + todoItems.size() + " ToDoItems and " + storedItems.size() + " storedApplicationObjects in " + time + "ms.");
+    
+    return todoItems.size() + storedItems.size();
+  }
+  
+
+
+  private int listItemsAsync(String name)
+  {
+    List<IStoredApplicationObject> storedItems = new LinkedList<>();
+    List<IToDoItem> todoItems = new LinkedList<>();
+    
+    
+    
+    IAllegroQueryManager queryManager = allegroApi_.fetchPartitionObjects(new FetchPartitionObjectsRequest.Builder()
+        .withQuery(new PartitionQuery.Builder()
+            .withName(PARTITION_NAME + name)
+            .build()
+            )
+          .withConsumerManager(new AsyncConsumerManager.Builder()
               .withConsumer(IToDoItem.class, (item, trace) ->
               {
                 synchronized(todoItems)
@@ -172,10 +234,26 @@ public class Benchmark extends CommandLineHandler implements Runnable, RequestHa
           .build()
           );
     
+    long start = System.currentTimeMillis();
+    queryManager.start();
+    
+    while(!queryManager.isIdle())
+    {
+      System.out.println("busy....");
+      try
+      {
+        Thread.sleep(100);
+      }
+      catch (InterruptedException e)
+      {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    }
     long end = System.currentTimeMillis();
     long time = end - start;
     
-    log_.info("Read " + todoItems.size() + " ToDoItems and " + storedItems.size() + " storedApplicationObjects in " + time + "ms.");
+    log_.info("Read Async " + todoItems.size() + " ToDoItems and " + storedItems.size() + " storedApplicationObjects in " + time + "ms.");
     
     return todoItems.size() + storedItems.size();
   }
@@ -210,7 +288,7 @@ public class Benchmark extends CommandLineHandler implements Runnable, RequestHa
                 .build()
                 )
             .withSortKey(toDoItem.getDue().toString() + i)
-            .withPurgeDate(Instant.now().plusMillis(24 * 60000))
+            .withPurgeDate(Instant.now().plusMillis(24 * 60 * 60000))
           .build();
         
         items.add(toDoObject);
