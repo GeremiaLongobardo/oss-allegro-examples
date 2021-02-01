@@ -40,17 +40,7 @@
             <configuration>
               <srcDirs>src/main/canon</srcDirs>
               <proformaCopyDir>src/main</proformaCopyDir>
-              <uriMapping>
-                <!-- <property>
-                 <name>https://models.oss.symphony.com/core.json</name>
-                 <value>foo/../../oss-models/core-model/src/main/resources/canon/core.json</value>
-                </property>
-                <property>
-                 <name>https://models.oss.symphony.com/object.json</name>
-                 <value>../oss-models/object-model/src/main/resources/canon/object.json</value>
-                </property> -->
-                
-                
+              <!-- <uriMapping>
                 <property>
                  <name>https://models.oss.symphony.com/core.json</name>
                  <value>/Users/bruce/symphony/git-SymphonyOSF/oss-models/core-model/src/main/resources/canon/core.json</value>
@@ -72,7 +62,7 @@
                  <value>/Users/bruce/symphony/git-SymphonyOSF/oss-models/chat-model/src/main/resources/canon/chat.json</value>
                 </property>
                 
-              </uriMapping>
+              </uriMapping> -->
 
               <templateArtifacts>
                 <templateArtifact>
