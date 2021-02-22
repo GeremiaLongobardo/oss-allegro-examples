@@ -12,6 +12,11 @@
       <artifactId>calendar</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.mongodb</groupId>
+      <artifactId>mongodb-driver-sync</artifactId>
+      <version>4.1.1</version>
+   </dependency>
     
     <dependency>
       <groupId>com.symphony.oss.allegro</groupId>

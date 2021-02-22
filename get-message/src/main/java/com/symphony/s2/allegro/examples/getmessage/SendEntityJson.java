@@ -6,8 +6,8 @@
 
 package com.symphony.s2.allegro.examples.getmessage;
 
-import com.symphony.oss.allegro.api.AllegroApi;
-import com.symphony.oss.allegro.api.IAllegroApi;
+import com.symphony.oss.allegro2.api.Allegro2Api;
+import com.symphony.oss.allegro2.api.IAllegro2Api;
 import com.symphony.oss.fugue.cmd.CommandLineHandler;
 import com.symphony.oss.models.allegro.canon.SslTrustStrategy;
 import com.symphony.oss.models.allegro.canon.facade.AllegroConfiguration;
@@ -28,13 +28,13 @@ public class SendEntityJson extends CommandLineHandler implements Runnable
   private static final String POD_URL         = "POD_URL";
   private static final String CREDENTIAL_FILE = "CREDENTIAL_FILE";
   private static final String THREAD_ID       = "THREAD_ID";
-  
+
   private String              serviceAccount_;
   private String              podUrl_;
   private String              credentialFile_;
   private ThreadId            threadId_;
-  
-  private IAllegroApi         allegroApi_;
+
+  private IAllegro2Api        allegroApi_;
 
   /**
    * Constructor.
@@ -50,7 +50,7 @@ public class SendEntityJson extends CommandLineHandler implements Runnable
   @Override
   public void run()
   {
-	allegroApi_ = new AllegroApi.Builder()
+    allegroApi_ = new Allegro2Api.Builder()
 	            .withConfiguration(new AllegroConfiguration.Builder()
 	                    .withPodUrl(podUrl_)
 	                    .withUserName(serviceAccount_)

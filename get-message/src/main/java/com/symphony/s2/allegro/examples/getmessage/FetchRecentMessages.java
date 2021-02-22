@@ -6,10 +6,9 @@
 
 package com.symphony.s2.allegro.examples.getmessage;
 
-import com.symphony.oss.allegro.api.AllegroApi;
-import com.symphony.oss.allegro.api.ConsumerManager;
-import com.symphony.oss.allegro.api.IAllegroApi;
-import com.symphony.oss.allegro.api.request.FetchRecentMessagesRequest;
+import com.symphony.oss.allegro2.api.Allegro2Api;
+import com.symphony.oss.allegro2.api.FetchRecentMessagesRequest;
+import com.symphony.oss.allegro2.api.IAllegro2Api;
 import com.symphony.oss.fugue.cmd.CommandLineHandler;
 import com.symphony.oss.models.allegro.canon.SslTrustStrategy;
 import com.symphony.oss.models.allegro.canon.facade.AllegroConfiguration;
@@ -26,22 +25,22 @@ import com.symphony.oss.models.core.canon.facade.ThreadId;
  */
 public class FetchRecentMessages extends CommandLineHandler implements Runnable
 {
-  private static final String ALLEGRO             = "ALLEGRO_";
-  private static final String SERVICE_ACCOUNT     = "SERVICE_ACCOUNT";
-  private static final String POD_URL             = "POD_URL";
-  private static final String OBJECT_STORE_URL    = "OBJECT_STORE_URL";
-  private static final String CREDENTIAL_FILE     = "CREDENTIAL_FILE";
-  private static final String THREAD_ID           = "THREAD_ID";
-  private static final String MAX_MESSAGES        = "MAX_MESSAGES";
-  
+  private static final String ALLEGRO          = "ALLEGRO_";
+  private static final String SERVICE_ACCOUNT  = "SERVICE_ACCOUNT";
+  private static final String POD_URL          = "POD_URL";
+  private static final String OBJECT_STORE_URL = "OBJECT_STORE_URL";
+  private static final String CREDENTIAL_FILE  = "CREDENTIAL_FILE";
+  private static final String THREAD_ID        = "THREAD_ID";
+  private static final String MAX_MESSAGES     = "MAX_MESSAGES";
+
   private String              serviceAccount_;
   private String              podUrl_;
   private String              objectStoreUrl_;
   private String              credentialFile_;
   private ThreadId            threadId_;
-  private int                 maxMessages_ = 5;
-  
-  private IAllegroApi         allegroApi_;
+  private int                 maxMessages_     = 5;
+
+  private IAllegro2Api        allegroApi_;
 
   /**
    * Constructor.
@@ -59,7 +58,7 @@ public class FetchRecentMessages extends CommandLineHandler implements Runnable
   @Override
   public void run()
   {
-	allegroApi_ = new AllegroApi.Builder()
+    allegroApi_ = new Allegro2Api.Builder()
 	            .withConfiguration(new AllegroConfiguration.Builder()
 	                    .withPodUrl(podUrl_)
 	                    .withApiUrl(objectStoreUrl_)
@@ -78,13 +77,13 @@ public class FetchRecentMessages extends CommandLineHandler implements Runnable
         new FetchRecentMessagesRequest.Builder()
           .withThreadId(threadId_)
           .withMaxItems(maxMessages_)
-          .withConsumerManager(new ConsumerManager.Builder()
-              .withConsumer(IReceivedChatMessage.class, (message, trace) ->
+          .withConsumerManager(allegroApi_.newConsumerManagerBuilder()
+              .withConsumer(IReceivedChatMessage.class, (lcMessage, message) ->
               {
                 System.out.println("M " + message.getMessageId() + " " + message.getText());
               }
               )
-              .withConsumer(IReceivedSocialMessage.class, (message, trace) ->
+              .withConsumer(IReceivedSocialMessage.class, (lcMessage, message) ->
               {
                 System.out.println("S " + message.getMessageId() + " " + message.getText() + " " + message.getMentions());
                 System.out.println("S " + message.getPresentationML());

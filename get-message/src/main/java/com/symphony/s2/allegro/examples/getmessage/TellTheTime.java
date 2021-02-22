@@ -8,8 +8,8 @@ package com.symphony.s2.allegro.examples.getmessage;
 
 import java.util.Date;
 
-import com.symphony.oss.allegro.api.AllegroApi;
-import com.symphony.oss.allegro.api.IAllegroApi;
+import com.symphony.oss.allegro2.api.Allegro2Api;
+import com.symphony.oss.allegro2.api.IAllegro2Api;
 import com.symphony.oss.fugue.cmd.CommandLineHandler;
 import com.symphony.oss.models.allegro.canon.facade.AllegroConfiguration;
 import com.symphony.oss.models.allegro.canon.facade.IChatMessage;
@@ -23,20 +23,20 @@ import com.symphony.oss.models.core.canon.facade.ThreadId;
  */
 public class TellTheTime extends CommandLineHandler implements Runnable
 {
-  private static final String ALLEGRO         = "ALLEGRO_";
-  private static final String SERVICE_ACCOUNT = "SERVICE_ACCOUNT";
-  private static final String POD_URL         = "POD_URL";
+  private static final String ALLEGRO          = "ALLEGRO_";
+  private static final String SERVICE_ACCOUNT  = "SERVICE_ACCOUNT";
+  private static final String POD_URL          = "POD_URL";
   private static final String OBJECT_STORE_URL = "OBJECT_STORE_URL";
-  private static final String CREDENTIAL_FILE = "CREDENTIAL_FILE";
-  private static final String THREAD_ID       = "THREAD_ID";
-  
+  private static final String CREDENTIAL_FILE  = "CREDENTIAL_FILE";
+  private static final String THREAD_ID        = "THREAD_ID";
+
   private String              serviceAccount_;
   private String              podUrl_;
   private String              objectStoreUrl_;
   private String              credentialFile_;
   private ThreadId            threadId_;
-  
-  private IAllegroApi         allegroApi_;
+
+  private IAllegro2Api        allegroApi_;
 
   /**
    * Constructor.
@@ -53,7 +53,7 @@ public class TellTheTime extends CommandLineHandler implements Runnable
   @Override
   public void run()
   {
-		allegroApi_ = new AllegroApi.Builder()
+		allegroApi_ = new Allegro2Api.Builder()
 	            .withConfiguration(new AllegroConfiguration.Builder()
 	                    .withPodUrl(podUrl_)
 	                    .withApiUrl(objectStoreUrl_)

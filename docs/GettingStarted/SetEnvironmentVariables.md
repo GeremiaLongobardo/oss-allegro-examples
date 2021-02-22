@@ -8,9 +8,9 @@ The example programs can accept parameters on the command line, via Java System 
 Variables. For this example set the following Environment Variables:
 
 ```sh
-$ export ALLEGRO_CREDENTIAL_FILE=~/allegroBotKey.pem 
+$ export ALLEGRO_CREDENTIAL_FILE=~/keys/myKey.pem 
 $ export ALLEGRO_POD_URL=https://yourpod.symphony.com
-$ export ALLEGRO_USER=allegroBot
+$ export ALLEGRO_SERVICE_ACCOUNT=allegroBot
 $ 
 ```
 

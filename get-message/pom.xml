@@ -18,7 +18,7 @@
     <dependency>
       <groupId>com.symphony.oss.allegro</groupId>
       <version>${allegro.version}</version>
-      <artifactId>allegro-api</artifactId>
+      <artifactId>allegro2-api</artifactId>
     </dependency>
 
     <dependency>

@@ -6,13 +6,10 @@
 
 package com.symphony.s2.allegro.examples.getmessage;
 
-import com.symphony.oss.allegro.api.AllegroApi;
-import com.symphony.oss.allegro.api.ConsumerManager;
-import com.symphony.oss.allegro.api.IAllegroApi;
-import com.symphony.oss.allegro.api.ReceivedChatMessageAdaptor;
-import com.symphony.oss.allegro.api.request.FetchRecentMessagesRequest;
+import com.symphony.oss.allegro2.api.Allegro2Api;
+import com.symphony.oss.allegro2.api.FetchRecentMessagesRequest;
+import com.symphony.oss.allegro2.api.IAllegro2Api;
 import com.symphony.oss.fugue.cmd.CommandLineHandler;
-import com.symphony.oss.fugue.trace.ITraceContext;
 import com.symphony.oss.models.allegro.canon.SslTrustStrategy;
 import com.symphony.oss.models.allegro.canon.facade.AllegroConfiguration;
 import com.symphony.oss.models.allegro.canon.facade.ConnectionSettings;
@@ -43,7 +40,7 @@ public class FetchConversation extends CommandLineHandler implements Runnable
   private ThreadId            threadId_;
   private int                 maxMessages_ = 5;
   
-  private IAllegroApi         allegroApi_;
+  private IAllegro2Api         allegroApi_;
 
   /**
    * Constructor.
@@ -61,7 +58,7 @@ public class FetchConversation extends CommandLineHandler implements Runnable
   @Override
   public void run()
   {
-	 allegroApi_ = new AllegroApi.Builder()
+	 allegroApi_ = new Allegro2Api.Builder()
 	            .withConfiguration(new AllegroConfiguration.Builder()
 	                    .withPodUrl(podUrl_)
 	                    .withApiUrl(objectStoreUrl_)
@@ -72,37 +69,56 @@ public class FetchConversation extends CommandLineHandler implements Runnable
 	                        .build())
 	                    .build())
 	            .build();
+	 
+	 
+	 allegroApi_.fetchRecentMessagesFromPod(
+       new FetchRecentMessagesRequest.Builder()
+         .withThreadId(threadId_)
+         .withMaxItems(maxMessages_)
+         .withConsumerManager(allegroApi_.newConsumerManagerBuilder()
+           .withConsumer(IReceivedSocialMessage.class, (lcMessage, message) ->
+           {
+             System.out.println("ADAPTOR-> " + message.getClass().getSimpleName() + ": " + message.getMessageId() + " " + message.getText());
+           })
+           .withConsumer(IReceivedMaestroMessage.class, (lcMessage, message) ->
+           {
+             System.out.println("CONSUMER-> " + message.getClass().getSimpleName() + ": " + message.getMessageId() + " " + message.getText());
+           })
+           .build()
+           )
+         .build()
+       );
 	    
     
-    allegroApi_.fetchRecentMessagesFromPod(
-        new FetchRecentMessagesRequest.Builder()
-          .withThreadId(threadId_)
-          .withMaxItems(maxMessages_)
-          .withConsumerManager(new ConsumerManager.Builder()
-            .withConsumer(new Adaptor())
-            .withConsumer(IReceivedMaestroMessage.class, (message, trace) ->
-            {
-              System.out.println("CONSUMER-> " + message.getClass().getSimpleName() + ": " + message.getMessageId() + " " + message.getText());
-            })
-            .build()
-            )
-          .build()
-        );
-  }
-  
-  class Adaptor extends ReceivedChatMessageAdaptor
-  {
-    @Override
-    public void onSocialMessage(IReceivedSocialMessage message, ITraceContext trace)
-    {
-      System.out.println("ADAPTOR-> " + message.getClass().getSimpleName() + ": " + message.getMessageId() + " " + message.getText());
-    }
-
-    @Override
-    public void onMaestroMessage(IReceivedMaestroMessage message, ITraceContext trace)
-    {
-      System.out.println("ADAPTOR-> " +message.getClass().getSimpleName() + ": " + message.getMessageId() + " " + message.getText());
-    }
+//    allegroApi_.fetchRecentMessagesFromPod(
+//        new FetchRecentMessagesRequest.Builder()
+//          .withThreadId(threadId_)
+//          .withMaxItems(maxMessages_)
+//          .withConsumerManager(new ConsumerManager.Builder()
+//            .withConsumer(new Adaptor())
+//            .withConsumer(IReceivedMaestroMessage.class, (message, trace) ->
+//            {
+//              System.out.println("CONSUMER-> " + message.getClass().getSimpleName() + ": " + message.getMessageId() + " " + message.getText());
+//            })
+//            .build()
+//            )
+//          .build()
+//        );
+//  }
+//  
+//  class Adaptor extends ReceivedChatMessageAdaptor
+//  {
+//    @Override
+//    public void onSocialMessage(IReceivedSocialMessage message, ITraceContext trace)
+//    {
+//      System.out.println("ADAPTOR-> " + message.getClass().getSimpleName() + ": " + message.getMessageId() + " " + message.getText());
+//    }
+//
+//    @Override
+//    public void onMaestroMessage(IReceivedMaestroMessage message, ITraceContext trace)
+//    {
+//      System.out.println("ADAPTOR-> " +message.getClass().getSimpleName() + ": " + message.getMessageId() + " " + message.getText());
+//    }
   }
   
   /**

@@ -1,0 +1,123 @@
+{
+	"canon": "0.0.1",
+	"info": {
+		"title": "Allegro FX Example Application Model",
+		"license": {
+			"name": "Apache 2.0",
+			"url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+		}
+	},
+	"id": "com.symphony.oss.allegro.examples.model.fx",
+  "version": "1.0",
+	"basePath": "/fx/v1",
+	"model": {
+		"javaGenPackage": "com.symphony.oss.allegro.examples.model.fx.canon",
+		"javaFacadePackage": "com.symphony.oss.allegro.examples.model.fx.canon.facade"
+	},
+	"components": {
+		"schemas": {
+      "Ccy": {
+        "description": "An currency code.",
+        "type": "string",
+        "enum": [
+          "USD",
+          "GBP",
+          "EUR",
+          "JPY"
+        ]
+      },
+      "ResponseType": {
+        "description": "The type of a response to a quote.",
+        "type": "string",
+        "enum": [
+          "EXECUTE",
+          "CANCEL"
+        ]
+      },
+      "CcyPair": {
+        "description": "A Currency Pair.",
+        "type": "object",
+        "facade": true,
+        "properties": {
+          "base": {
+            "$ref": "#/components/schemas/Ccy"
+          },
+          "counter": {
+            "$ref": "#/components/schemas/Ccy"
+          }
+        }
+      },
+      "FxHeader": {
+        "description": "The unencrypted header for messages.",
+        "type": "object",
+        "extends": "https://models.oss.symphony.com/core.json#/components/schemas/ApplicationPayload",
+        "properties": {
+          "ccyPair": {
+             "$ref": "#/components/schemas/CcyPair"
+          },
+          "id": {
+            "type": "string"
+          },
+          "payloadType": {
+            "type": "string"
+          }
+        }
+      },
+      "FxBase": {
+        "description": "Base of FX objects.",
+        "type": "object",
+        "extends": "https://models.oss.symphony.com/core.json#/components/schemas/ApplicationPayload",
+        "facade": true,
+        "properties": {
+          "ccyPair": {
+             "$ref": "#/components/schemas/CcyPair"
+          },
+          "id": {
+            "type": "string"
+          },
+          "expires": {
+            "$ref": "https://models.oss.symphony.com/core.json#/components/schemas/Instant"
+          }
+        }
+      },
+      "Quote": {
+        "description": "A quote.",
+        "type": "object",
+        "extends": "#/components/schemas/FxBase",
+        "facade": false,
+        "properties": {
+          "price": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "Rfq": {
+        "description": "A request for quote.",
+        "type": "object",
+        "extends": "#/components/schemas/FxBase",
+        "properties": {
+          "streamFor": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "Response": {
+        "description": "A response to a quote.",
+        "type": "object",
+        "extends": "#/components/schemas/Quote",
+        "properties": {
+          "type": {
+             "$ref": "#/components/schemas/ResponseType"
+          }
+        }
+      }
+   
+    }
+	}
+}

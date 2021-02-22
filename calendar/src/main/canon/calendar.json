@@ -16,6 +16,35 @@
 	},
 	"components": {
 		"schemas": {
+      "PersonIndex": {
+        "description": "Unencrypted index data for a Person.",
+        "type": "object",
+        "extends": "https://models.oss.symphony.com/object.json#/components/schemas/ApplicationObjectHeader",
+        "facade": false,
+        "properties": {
+          "givenName": {
+            "type": "string"
+          },
+          "familyName": {
+            "type": "string"
+          }
+        }
+      },
+      "PersonDetails": {
+        "description": "Encrypted details for a Person.",
+        "type": "object",
+        "extends": "https://models.oss.symphony.com/object.json#/components/schemas/ApplicationObjectPayload",
+        "facade": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "dob": {
+            "$ref": "https://models.oss.symphony.com/core.json#/components/schemas/Instant"
+          }
+        }
+      },
       "ToDoItem": {
         "description": "A TODO item.",
         "type": "object",
